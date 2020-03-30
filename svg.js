@@ -1,53 +1,59 @@
 /*
  * svg.js
- * @version: 0.0.1
+ * @version: 0.0.2
  * @author: mafumafuultu
  * @url: https://github.com/mafumafuultu/svg.js
  * @licece: MIT
  */
+const none = undefined;
 
-const lift = (v, f) => f(v);
-const __renderSet = k => (o, v) => (o.render[k] = v, o);
+const F = {
+	mod : (o, f) => (f(o), o),
+	lift: (o, f) => () => f(o),
+	vmod: (k, v) => (v, o) => (f(o, k, v), o)
+};
 
-const ___shapeRender = t => ({
-	auto()               {return this._set('auto')(t);},
-	crispEdges()         {return this._set('crispEdges')(t);},
-	geometricPrecision() {return this._set('geometricPrecision')(t);},
-	inherit()            {return this._set('inherit')(t);},
-	_set: v => o  => __renderSet('shape-rendering')(o, v)
+const omap = (o, k, v) => (o[k] = v, o);
+const __renderMap = (o, k, v) => (o.render[k] = v, o);
+
+const __shapeRender = t => ({
+	auto() {return this._set('auto', t);},
+	optimizeSpeed() {return this._set('optimizeSpeed', t)},
+	crispEdges() {return this._set('crispEdges', t);},
+	geometricPrecision() {return this._set('geometricPrecision', t);},
+	_set : F.vmod('shape-renderting', __renderMap)
 });
-const ___colorRender = t => ({
-	auto()            {return this._set('auto')(t);},
-	optimizeSpeed()   {return this._set('optimizeSpeed')(t);},
-	optimizeQuality() {return this._set('optimizeQuality')(t);},
-	inherit()         {return this._set('inherit')(t);},
-	_set: v => o  => __renderSet('color-renderring')(o, v),
+const __textRender = t => ({
+	auto() {return this._set('auto', t);},
+	optimizeSpeed() {return this._set('optimizeSpeed', t)},
+	optimizeLegibility() {return this._set('optimizeLegibility', t);},
+	geometricPrecision() {return this._set('geometricPrecision', t);},
+	_set : F.vmod('text-rendering', __renderMap)
 });
-const ___textRender = t => ({
-	auto()                      {return this._set('auto')(t);},
-	optimizeSpeed()             {return this._set('optimizeSpeed')(t);},
-	optimizeLegibility()        {return this._set('optimizeLegibility')(t);},
-	inhgeometricPrecisionerit() {return this._set('geometricPrecision')(t);},
-	inherit()                   {return this._set('inherit')(t);},
-	_set: v => o  => __renderSet('text-renderring')(o, v),
+const __imageRender = t => ({
+	auto() {return this._set('auto', t);},
+	optimizeSpeed() {return this._set('optimizeSpeed', t)},
+	optimizeLegibility() {return this._set('optimizeLegibility', t);},
+	_set : F.vmod('image-rendering', __renderMap)
 });
-const ___imageRender = t => ({
-	auto()             {return this._set('auto')(t);},
-	optimizeSpeed()    {return this._set('optimizeSpeed')(t);},
-	optimizeQuality()  {return this._set('optimizeQuality')(t);},
-	inherit()          {return this._set('geometricPrecision')(t);},
-	crispEdges()       {return this._set('crisp-edges')(t);},
-	pixelated()        {return this._set('pixelated')(t);},
-	mozCrispEdges()    {return this._set('-moz-crisp-edges')(t);},
-	_set: v => o  => __renderSet('image-renderring')(o, v),
+const __imageRender_css4 = () => ({
+	get auto() {return {'image-rendering': 'auto'}},
+	get smooth() {return {'image-rendering': 'smooth'}},
+	get highQualiry() {return {'image-rendering': 'high-quality'}},
+	get crispEdges() {return {'image-rendering': 'crisp-edges'}},
+	get pixelated() {return {'image-rendering': 'pixelated'}},
 });
+
 const renderGen = () => ({
-	render: {'shape-rendering': 'auto', 'color-rendering':'auto', 'text-rendering':'auto', 'image-rendering' : 'auto'},
-	Shape () {return lift(this, ___shapeRender);},
-	Color() {return lift(this, ___colorRender);},
-	Text() {return lift(this, ___textRender);},
-	Image() {return lift(this, ___imageRender);},
-	get _() {return this.render;}
+	render: {
+		'shape-rendering': 'auto',
+		'text-rendering':'auto',
+		'image-rendering' : 'auto'
+	},
+	Shape () {return __shapeRender(this);},
+	Text ()   {return __textRender(this);},
+	Image ()  {return __imageRender(this);},
+	get _ ()  {return this.render;}
 });
 
 const __BASE_PROTO__ = {
@@ -88,6 +94,16 @@ const __BASE_PROTO__ = {
 			return this;
 		}
 	},
+	zoom: {
+		value(center=[0,0], x) {
+			if (this.has('viewBox')) {
+				let {width, height} = this.attrs();
+				let w = width/x, h = height/x;
+				this.attrs({viewBox: `${center[0] - w/2} ${center[1] - h/2} ${w} ${h}`})
+			}
+			return this;
+		}
+	},
 	$: {
 		value(...child) {
 			if (this.has('innerHTML')) {
@@ -104,6 +120,14 @@ const __BASE_PROTO__ = {
 			return this;
 		}
 	},
+	txt: {
+		value(txt = '') {
+			if (this.has('textContent')) {
+				this['@'].textContent = txt;
+			}
+			return this;
+		}
+	},
 	inner: {
 		value(s) {
 			if (this.has('innerHTML')) {
@@ -112,25 +136,12 @@ const __BASE_PROTO__ = {
 			return this;
 		}
 	},
-	fillStroke : {
-		value(fill, stroke) {
-			if (this.has('setAttribute')) {
-				fill == null
-					? this['@'].removeAttribute('fill')
-					: this['@'].setAttribute('fill', fill);
-				stroke == null
-					? this['@'].removeAttribute('stroke')
-					: this['@'].setAttribute('stroke', stroke);
-			}
-			return this;
-		}
-	},
-	zoom: {
-		value(center=[0,0], x) {
-			if (this.has('viewBox')) {
-				let {width, height} = this.attrs();
-				let w = width/x, h = height/x;
-				this.attrs({viewBox: `${center[0] - w/2} ${center[1] - h/2} ${w} ${h}`})
+	f: {
+		value(f = el => {}) {
+			try {
+				f(this['@'])
+			} catch (e) {
+				console.error(e);
 			}
 			return this;
 		}
@@ -143,7 +154,32 @@ const __BASE_PROTO__ = {
 			}
 			return this;
 		}
-	}
+	},
+	fill: {
+		value(color = 'transparent') {
+			if (this.has('setAttribute')) {
+				this['@'].setAttribute('fill', fill);
+			}
+			return this;
+		}
+	},
+	stroke: {
+		value(color = 'transparent') {
+			if (this.has('setAttribute')) {
+				this['@'].setAttribute('stroke', stroke);
+			}
+			return this;
+		}
+	},
+	fillStroke : {
+		value(fill = 'transparent', stroke = 'transparent') {
+			if (this.has('setAttribute')) {
+				this['@'].setAttribute('fill', fill);
+				this['@'].setAttribute('stroke', stroke);
+			}
+			return this;
+		}
+	},
 };
 
 const vg = function(el, custom = '') {
@@ -156,8 +192,18 @@ const vg = function(el, custom = '') {
 
 const _tag = tag => document.createElement(tag);
 const _svgTag = tag => document.createElementNS("http://www.w3.org/2000/svg", tag);
-const pos = (x, y) => ({x, y, toString() {return `${this.x} ${this.y}`;}});
-const points = (...p) => p.map(([x,y]) => `${x},${y}`).join(' ');
+const joinPos = ([x, y]) => `${x},${y}`;
+const points = (...p) => p.map(joinPos).join(' ');
+
+const aniRotate = v => ({
+	values(fromR=0, fromXY=[0, 0], toR=360, toXY=[0, 0]) {
+		v.op.from = `${fromR} ${fromXY.join()}`;
+		v.op.to = `${toR} ${toXY.join()}`;
+		return v;
+	}
+});
+const aniPosValues = v => ({values(...p) {return v.op.values = p.map(joinPos).join('; ') ,v}});
+const aniValues = v => ({values(...p) {return v.op.values = p.join('; '), v}});
 
 const svg = (width=400, height=300, viewBox = `0 0 ${width} ${height}`) => vg(_svgTag('svg')).attrs({version:1.2,xmlns :"http://www.w3.org/2000/svg", 'xmlns:xlink': 'http://www.w3.org/1999/xlink',width, height, viewBox});
 const circle = (cx=0, cy=0, r=0) => vg(_svgTag('circle')).attrs({cx, cy, r});
@@ -171,7 +217,7 @@ const polyline = (...p) => vg(_svgTag('polyline')).attrs({points: points(...p)})
 const defs = () => vg(_svgTag('defs'));
 const group = () => vg(_svgTag('g'));
 const use = (id, attr={}) => vg(_svgTag('use')).attrs({'xlink:href': id, ...attr});
-
+const marker = (markerWidth, markerHeight) => vg(_svgTag('marker')).attrs({markerWidth, markerHeight});
 
 /**
  * ```js
@@ -192,13 +238,32 @@ const path = () => ({
 	line(x, y, abs) {return this._stack(`${x} ${y}`, abs, 'l');},
 	x(x, abs) {return this._stack(`${x}`, abs, 'h');},
 	y(y, abs) {return this._stack(`${y}`, abs, 'v');},
-	bezier3d(xy=pos(0,0), han1=pos(0,0), han2=pos(0,0), abs) {return this._stack(`${han1}, ${han2}, ${xy}`, abs, 'c');},
-	bezier3dS(xy=pos(0,0), han2=pos(0,0), abs) {return this._stack(`${han2}, ${xy}`, abs, 's');},
-	bezier2d(xy=pos(0,0), han=pos(0,0), abs) {return this._stack(`${han}, ${xy}`, abs, 'q');},
-	bezier2dS (xy=pos(0,0), abs) {return 'qQTt'.includes(this.before) ? this.stack(`${xy}`, abs, 't') : this;},
-	arc(xy=pos(0,0), rotate, lef, sf, posd=pos(0,0), abs) {return this.stack(`${xy} ${rotate} ${laf} ${sf} ${posd}`, abs, 'a');},
+	bezier3d(xy=[0,0], han1=[0,0], han2=[0,0], abs) {return this._stack(`${han1}, ${han2}, ${xy}`, abs, 'c');},
+	bezier3dS(xy=[0,0], han2=[0,0], abs) {return this._stack(`${han2}, ${xy}`, abs, 's');},
+	bezier2d(xy=[0,0], han=[0,0], abs) {return this._stack(`${han}, ${xy}`, abs, 'q');},
+	bezier2dS (xy=[0,0], abs) {return 'qQTt'.includes(this.before) ? this.stack(`${xy}`, abs, 't') : this;},
+	arc(xy=[0,0], rotate, lef, sf, posd=[0,0], abs) {return this.stack(`${xy} ${rotate} ${laf} ${sf} ${posd}`, abs, 'a');},
 	close(attr={}, close=true) {return vg(_svgTag('path')).attrs({...attr, d: this.d.join(' ') + (close ? ' Z' : '')});},
 	toPath(close=true) {return this.d.join(' ') + (close ? ' Z' : '');}
+});
+
+const TIME = (ms = 0) => ({
+	t: ms,
+	d (t = 0) {return this.t += t * 86400000, this;},
+	h (t = 0) {return this.t += t * 3600000, this;},
+	m (t = 0) {return this.t += t * 60000, this;},
+	s (t = 0) {return this.t += t * 1000, this;},
+	ms(t = 0) {return this.t += t, this;},
+	_(unit = 'ms') {
+		switch(unit) {
+			case 'd' : return `${this.t / 86400000}d`;
+			case 'h' : return `${this.t / 3600000}h`;
+			case 'm' : return `${this.t / 60000}m`;
+			case 's' : return `${this.t / 1000}s`;
+			case 'ms':
+			default: return `${this.t}ms`;
+		}
+	}
 });
 
 /**
@@ -253,9 +318,9 @@ const animatePath = (id, ms = 1000, repeat = 'indefinite', path) => ({
 	discrete() {return this.op.calcMode = 'ease', this;},
 	/**
 	 * ```js
-	 * animatePath.spline( spline( pos(0, 0), pos(1, 1) ), spline( pos(0, 0), pos(1, 1) )).close();
+	 * animatePath.spline( spline( [0, 0], [1, 1] ), spline( [0, 0], [1, 1] )).close();
 	 * ```
-	 * spline(pos(0, 0), pos(1,2)),
+	 * spline([0, 0], [1, 2]),
 	 * @param  {...any} splines
 	 */
 	spline(...splines) {
@@ -269,14 +334,97 @@ const animatePath = (id, ms = 1000, repeat = 'indefinite', path) => ({
 	close () {return vg(_svgTag('animateMotion')).attrs(this.op).$(this.lk === '' ? undefined : vg(_svgTag('mpath').attr({'xlink:href': this.lk})));}
 });
 
-// const animateTransform = (id, ms = 1000, repeat = 'indefinite', target) => ({
-// 	op : {id: id, dur: `${ms}ms`, repeatCount: repeat, attributeName: target, attributeType:"XML",},
-// 	rotate (r = '0') {return this.op.type='rotate', this;},
-// 	translate (r = '0') {return this.op.type='translate', this;},
-// 	skewX (r = '0') {return this.op.type='skewX', this;},
-// 	skewY (r = '0') {return this.op.type='skewY', this;},
-// 	scale (r = '0') {return this.op.type='scale', this;},
-// 	from (f) {return this.op.from = f, this;},
-// 	to (t) {return this.op.to = t, this;},
-// 	close() {return vg(_svgTag('animateTransform')).attrs(this.op);}
-// });
+const animateTransform = (id, ms = 1000, repeat = 'indefinite', target) => ({
+	op : {id: id, dur: `${ms}ms`, repeatCount: repeat, attributeName: target, attributeType:"XML",},
+	__values() {
+		delete this.op.from;
+		delete this.op.to;
+		return this;
+	},
+	rotate (r = '0') {
+		delete this.op.values;
+
+		aniRotate(this)
+		return this.op.type='rotate', lift(this, aniRotate);
+	},
+	translate (r = '0') {
+		return this.op.type='translate', lift(this, aniPosValues);
+	},
+	skewX (r = '0') {
+		return this.op.type='skewX', lift(this, aniValues);
+	},
+	skewY (r = '0') {
+		return this.op.type='skewY', lift(this, aniValues);
+	},
+	scale (r = '0') {
+		return this.op.type='scale', lift(this, aniValues);
+	},
+	from (f) {return this.op.from = f, this;},
+	to (t) {return this.op.to = t, this;},
+	begin (t) {return this.op.begin = t, this;},
+
+	additive(v = 'sum') {
+		switch(v) {
+			case 'sum':
+			case 'replace':
+				this.op.additive = v;
+			default:
+		}
+		return this;
+	},
+	close() {return vg(_svgTag('animateTransform')).attrs(this.op);}
+});
+
+
+function* mat(a){
+	yield* a;
+}
+const matrix4x4Cell = (a, b) => {
+	let i = 4, v = 0;
+	while(i--) v += a.next().value * b.next().value;
+	return v;
+};
+const _4x4_ = (a, b) => (l, r) => {
+	return matrix4x4Cell(mat(MATRIX.X[l].map(v => a[v])), mat(MATRIX.Y[r].map(v => b[v])))
+};
+const MATRIX = {
+	X: [
+		[0,1,2,3],
+		[4,5,6,7],
+		[8,9,10,11],
+		[12,13,14,15]
+	],
+	Y: [
+		[0,4,8,12],
+		[1,5,9,13],
+		[2,6,10,14],
+		[3,7,11,15]
+	],
+	__mix (a, b) {
+		let arr = [];
+		f = _4x4_(a, b);
+		let i = 0;
+		while(i < 4) {
+			let j = 0;
+			while(j < 4) {
+				arr.push(f(j++, i));
+			}
+			i++;
+		}
+		return arr;
+	},
+	mix(...matrix) {
+		return 1 < matrix.length && matrix.every(v => v.length === 16)
+			? matrix.reduce(this.__mix)
+			: [];
+	}
+};
+
+const onload = () => document.readyState !== 'complete'
+	? new Promise(r => document.addEventListener('readystatechange', () => {
+		switch (document.readyState) {
+			case 'complete': r();break;
+			default:
+		}
+	}))
+	: Promise.resolve();

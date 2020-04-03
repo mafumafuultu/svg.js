@@ -8,9 +8,9 @@
 const none = undefined;
 
 const F = {
-	mod : (o, f) => (f(o), o),
-	lift: (o, f) => () => f(o),
-	vmod: (k, v) => (v, o) => (f(o, k, v), o)
+	mod : (o, f = o => {}) => (f(o), o),
+	lift: (o, f = v => {}) => () => f(o),
+	vmod: (k, f = (o, k, v) => {}) => (v, o) => (f(o, k, v), o)
 };
 
 const omap = (o, k, v) => (o[k] = v, o);
@@ -21,7 +21,7 @@ const __shapeRender = t => ({
 	optimizeSpeed() {return this._set('optimizeSpeed', t)},
 	crispEdges() {return this._set('crispEdges', t);},
 	geometricPrecision() {return this._set('geometricPrecision', t);},
-	_set : F.vmod('shape-renderting', __renderMap)
+	_set : F.vmod('shape-rendering', __renderMap)
 });
 const __textRender = t => ({
 	auto() {return this._set('auto', t);},
@@ -34,7 +34,7 @@ const __imageRender = t => ({
 	auto() {return this._set('auto', t);},
 	optimizeSpeed() {return this._set('optimizeSpeed', t)},
 	optimizeLegibility() {return this._set('optimizeLegibility', t);},
-	_set : F.vmod('image-rendering', __renderMap)
+	_set : F.vmod('image-rendering', __renderMap)(v, o)
 });
 const __imageRender_css4 = () => ({
 	get auto() {return {'image-rendering': 'auto'}},
@@ -44,6 +44,9 @@ const __imageRender_css4 = () => ({
 	get pixelated() {return {'image-rendering': 'pixelated'}},
 });
 
+/**
+ * create rendering options
+ */
 const renderGen = () => ({
 	render: {
 		'shape-rendering': 'auto',
@@ -70,6 +73,51 @@ const __BASE_PROTO__ = {
 	type: {
 		value(t, is) {
 			return typeof t === is;
+		}
+	},
+	of : {
+		value (v, t) {return v instanceof t;}
+	},
+	id : {
+		value(id) {
+			if (this.has('id') && this.type(id, 'String')) {
+				this['@'].id = id;
+			}
+			return this;
+		}
+	},
+	cls : {
+		value(v, force = true) {
+			if (this.has('classList') && this.type(v, 'String')) {
+				this['@'].classList.toggle(v, force);
+			}
+			return this;
+		}
+	},
+	addCls : {
+		value(a) {
+			if (this.has('classList') && this.of(a, Array)) {
+				a.reduce((cl, v) => (cl.toggle(v, true), cl), this['@'].classList)
+			}
+			return this;
+		}
+	},
+	rmCls : {
+		value(a) {
+			if (this.has('classList') && this.of(a, Array)) {
+				a.reduce((cl, v) => (cl.toggle(v, false), cl), this['@'].classList)
+			}
+			return this;
+		}
+	},
+	data : {
+		value(o) {
+			if (this.has('dataset') && this.type(k, 'String')) {
+				v == null
+					? delete this['@'].dataset[k]
+					: this['@'].dataset[k] = v;
+			}
+			return this;
 		}
 	},
 	attrs: {
@@ -107,7 +155,7 @@ const __BASE_PROTO__ = {
 	$: {
 		value(...child) {
 			if (this.has('innerHTML')) {
-				return this['@'].innerHTML += this['@parse'](child).reduce((t, v) => t + v.outerHTML ,''), this;
+				return this['@'].innerHTML += this['@parse'](child).reduce((t, v) => 'outerHTML' in v ? t + v.outerHTML : t + v, ''), this;
 			}
 			return this;
 		},
@@ -158,7 +206,7 @@ const __BASE_PROTO__ = {
 	fill: {
 		value(color = 'transparent') {
 			if (this.has('setAttribute')) {
-				this['@'].setAttribute('fill', fill);
+				this['@'].setAttribute('fill', color);
 			}
 			return this;
 		}
@@ -166,7 +214,7 @@ const __BASE_PROTO__ = {
 	stroke: {
 		value(color = 'transparent') {
 			if (this.has('setAttribute')) {
-				this['@'].setAttribute('stroke', stroke);
+				this['@'].setAttribute('stroke', color);
 			}
 			return this;
 		}
@@ -180,8 +228,31 @@ const __BASE_PROTO__ = {
 			return this;
 		}
 	},
+	on : {
+		value (ev, f, opt = true) {
+			if (this.has('addEventListener')) {
+				this['@'].addEventListener(ev, f, opt);
+			}
+			return this;
+		}
+	},
+	off : {
+		value (ev, f, opt= true) {
+			if (this.has('removeEventListener')) {
+				this.type(f, 'function')
+					? this['@'].removeEventListener(ev, f, opt)
+					: this['@'].removeEventListener(ev);
+			}
+			return this;
+		}
+	}
 };
 
+/**
+ * Element wrapper
+ * @param {*} el element
+ * @param {*} custom prototype
+ */
 const vg = function(el, custom = '') {
 	return Object.create(
 		{ '@': el },
@@ -191,14 +262,14 @@ const vg = function(el, custom = '') {
 };
 
 const _tag = tag => document.createElement(tag);
-const _svgTag = tag => document.createElementNS("http://www.w3.org/2000/svg", tag);
+const _svgTag = tag => document.createElementNS('http://www.w3.org/2000/svg', tag);
 const joinPos = ([x, y]) => `${x},${y}`;
 const points = (...p) => p.map(joinPos).join(' ');
 
 const aniRotate = v => ({
 	values(fromR=0, fromXY=[0, 0], toR=360, toXY=[0, 0]) {
-		v.op.from = `${fromR} ${fromXY.join()}`;
-		v.op.to = `${toR} ${toXY.join()}`;
+		v.op.from = `${fromR} ${fromXY.join(',')}`;
+		v.op.to = `${toR} ${toXY.join(',')}`;
 		return v;
 	}
 });
@@ -210,7 +281,7 @@ const circle = (cx=0, cy=0, r=0) => vg(_svgTag('circle')).attrs({cx, cy, r});
 const ellipse = (cx=0, cy=0, rx=0, ry=0) => vg(_svgTag('ellipse')).attrs({cx, cy, rx, ry});
 const line = (x1=0,y1=0,x2=0,y2=0) => vg(_svgTag('line')).attrs({x1,y1,x2,y2});
 const rect = (x=0, y=0, width=0, height=0) => vg(_svgTag('rect')).attrs({x, y, width, height});
-const text = (x=0, y=0, txt = '') => vg(_svgTag('text')).attrs({x, y, textContent: txt});
+const text = (x=0, y=0, txt = '') => vg(_svgTag('text')).attrs({x, y}).txt(txt);
 const polygon = (...p) => vg(_svgTag('polygon')).attrs({points: points(...p)});
 const polyline = (...p) => vg(_svgTag('polyline')).attrs({points: points(...p)});
 
@@ -284,6 +355,18 @@ const animate = (id, ms = 1000, repeat='indefinite', target) => ({
 	spline(...splines) {return Object.assign(this.op, {calcMode : 'spline', keySplines: splines.join(';')}), this;},
 	paced () {return this.op.calcMode = 'paced', this;},
 	timing (target, begin, val) {return this.timeFunc.push(['set', {attributeType:'XML',attributeName:target,begin: begin, to: val}]), this;},
+	additive(v = 'sum') {
+		switch(v) {
+			case 'sum':
+			case 'replace':
+				this.op.additive = v;
+			default:
+		}
+		return this;
+	},
+	accumulate() {
+		return this;
+	},
 	close() {return vg(_svgTag('animate')).attrs(this.op).$(this.timeFunc.map((tag, opt) => vg(_svgTag(tag)).attrs(opt)))}
 });
 
@@ -330,6 +413,18 @@ const animatePath = (id, ms = 1000, repeat = 'indefinite', path) => ({
 		}), this;
 	},
 	paced () {return this.op.calcMode = 'paced', this;},
+	additive(v = 'sum') {
+		switch(v) {
+			case 'sum':
+			case 'replace':
+				this.op.additive = v;
+			default:
+		}
+		return this;
+	},
+	accumulate() {
+		return this;
+	},
 	link (id) {return delete this.op.path, this.lk = id, this;},
 	close () {return vg(_svgTag('animateMotion')).attrs(this.op).$(this.lk === '' ? undefined : vg(_svgTag('mpath').attr({'xlink:href': this.lk})));}
 });
@@ -341,23 +436,21 @@ const animateTransform = (id, ms = 1000, repeat = 'indefinite', target) => ({
 		delete this.op.to;
 		return this;
 	},
-	rotate (r = '0') {
+	rotate () {
 		delete this.op.values;
-
-		aniRotate(this)
-		return this.op.type='rotate', lift(this, aniRotate);
+		return this.op.type='rotate', aniRotate(this);
 	},
-	translate (r = '0') {
-		return this.op.type='translate', lift(this, aniPosValues);
+	translate () {
+		return this.op.type='translate', aniPosValues(this);
 	},
-	skewX (r = '0') {
-		return this.op.type='skewX', lift(this, aniValues);
+	skewX () {
+		return this.op.type='skewX', aniValues(this);
 	},
-	skewY (r = '0') {
-		return this.op.type='skewY', lift(this, aniValues);
+	skewY () {
+		return this.op.type='skewY', aniValues(this);
 	},
-	scale (r = '0') {
-		return this.op.type='scale', lift(this, aniValues);
+	scale () {
+		return this.op.type='scale', aniValues(this);
 	},
 	from (f) {return this.op.from = f, this;},
 	to (t) {return this.op.to = t, this;},
@@ -368,13 +461,24 @@ const animateTransform = (id, ms = 1000, repeat = 'indefinite', target) => ({
 			case 'sum':
 			case 'replace':
 				this.op.additive = v;
+				break;
 			default:
+				delete this.op.additive;
+		}
+		return this;
+	},
+	accumulate(v = 'sum') {
+		switch (v) {
+			case 'sum':
+				this.op.accumulate = v;
+				break;
+			default:
+				delete this.op.accumulate;
 		}
 		return this;
 	},
 	close() {return vg(_svgTag('animateTransform')).attrs(this.op);}
 });
-
 
 function* mat(a){
 	yield* a;
@@ -384,9 +488,7 @@ const matrix4x4Cell = (a, b) => {
 	while(i--) v += a.next().value * b.next().value;
 	return v;
 };
-const _4x4_ = (a, b) => (l, r) => {
-	return matrix4x4Cell(mat(MATRIX.X[l].map(v => a[v])), mat(MATRIX.Y[r].map(v => b[v])))
-};
+const _4x4_ = (a, b) => (l, r) => matrix4x4Cell(mat(MATRIX.X[l].map(v => a[v])), mat(MATRIX.Y[r].map(v => b[v])));
 const MATRIX = {
 	X: [
 		[0,1,2,3],
@@ -413,11 +515,12 @@ const MATRIX = {
 		}
 		return arr;
 	},
+	is: (x, y) => v => v.length === x * y,
 	mix(...matrix) {
-		return 1 < matrix.length && matrix.every(v => v.length === 16)
+		return 1 < matrix.length && matrix.every(this.is(4,4))
 			? matrix.reduce(this.__mix)
 			: [];
-	}
+	},
 };
 
 const onload = () => document.readyState !== 'complete'

@@ -51,12 +51,6 @@ src
 </script>
 ```
 
-node
-```js
-require('svgjs');
-onload().then(() => {});
-```
-
 esmodule
 
 ```html

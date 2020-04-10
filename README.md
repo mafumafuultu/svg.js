@@ -9,8 +9,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>svgjs</title>
-<script src="svg.npm.js"></script>
-<script>
+<!-- <script src="svg.npm.js"></script> -->
+<script type="module">
+import * as SVG from './svg.js';
+Object.assign(window, SVG);
+
 onload().then(() => {
 	vg(document.body).$(
 		svg(400, 400).zoom([0,0], 1).attrs({background: "orange",}).$(

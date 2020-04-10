@@ -9,7 +9,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>svgjs</title>
-<script src="svg.js"></script>
+<script src="svg.npm.js"></script>
 <script>
 onload().then(() => {
 	vg(document.body).$(
@@ -43,6 +43,34 @@ onload().then(() => {
 </html>
 ```
 
+src
+```html
+<script src="svg.npm.js"></script>
+<script>
+	onload().then(() => {});
+</script>
+```
+
+node
+```js
+require('svgjs');
+onload().then(() => {});
+```
+
+esmodule
+
+```html
+<script type="module">
+	import * as SVG from './svg.js';
+	Object.assign(window, SVG);
+</script>
+```
+
+
+<style>
+	
+</style>
+
 ## Basic
 ### none
 `none === undefined`
@@ -64,7 +92,18 @@ The `vg` function wraps an HTMLElement or SVGElement and pseudo-extends the prot
 _tag('div') == document.createElement('div')
 ```
 
-#### vg.id('id')
+#### vg(element).id('id')
+
+```js
+const div = () => vg(_tag('div'));
+div().id('idtext')
+```
+
+```js
+const div = () => document.createElement('div');
+div.id = 'idtext;'
+```
+
 #### vg.cls('classname', force? )
 #### vg.addCls(['classNameA', 'classNameB'])
 #### vg.rmCls(['classNameA', 'classNameB'])
@@ -98,7 +137,6 @@ If you write in svg.js, it looks like this
 ```js
 svg(200, 200).zoom([100, 100], 2)
 ```
-
 
 ### circle(cx, cy, r) => vg
 

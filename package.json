@@ -1,0 +1,25 @@
+{
+  "name": "svg",
+  "version": "1.0.0",
+  "description": "[view sample](https://codepen.io/mafumafuultu/project/editor/AVbNQR)",
+  "main": "svg.js",
+  "type": "module",
+  "scripts": {
+    "test": "exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mafumafuultu/svg.js.git"
+  },
+  "keywords": [
+    "svg",
+    "chain",
+    "graphic"
+  ],
+  "author": "mafumafuultu",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mafumafuultu/svg.js/issues"
+  },
+  "homepage": "https://github.com/mafumafuultu/svg.js#readme"
+}

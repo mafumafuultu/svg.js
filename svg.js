@@ -1,6 +1,6 @@
 /*
  * svg.js
- * @version: 0.0.2
+ * @version: 0.0.3
  * @author: mafumafuultu
  * @url: https://github.com/mafumafuultu/svg.js
  * @licece: MIT
@@ -276,7 +276,7 @@ const aniRotate = v => ({
 const aniPosValues = v => ({values(...p) {return v.op.values = p.map(joinPos).join('; ') ,v}});
 const aniValues = v => ({values(...p) {return v.op.values = p.join('; '), v}});
 
-const svg = (width=400, height=300, viewBox = `0 0 ${width} ${height}`) => vg(_svgTag('svg')).attrs({version:1.2,xmlns :"http://www.w3.org/2000/svg", 'xmlns:xlink': 'http://www.w3.org/1999/xlink',width, height, viewBox});
+const svg = (width=400, height=300, viewBox = `0 0 ${width} ${height}`) => vg(_svgTag('svg')).attrs({width, height, viewBox});
 const circle = (cx=0, cy=0, r=0) => vg(_svgTag('circle')).attrs({cx, cy, r});
 const ellipse = (cx=0, cy=0, rx=0, ry=0) => vg(_svgTag('ellipse')).attrs({cx, cy, rx, ry});
 const line = (x1=0,y1=0,x2=0,y2=0) => vg(_svgTag('line')).attrs({x1,y1,x2,y2});
@@ -286,8 +286,9 @@ const polygon = (...p) => vg(_svgTag('polygon')).attrs({points: points(...p)});
 const polyline = (...p) => vg(_svgTag('polyline')).attrs({points: points(...p)});
 
 const defs = () => vg(_svgTag('defs'));
+const symbol = () => vg(_svgTag('symbol'));
 const group = () => vg(_svgTag('g'));
-const use = (id, attr={}) => vg(_svgTag('use')).attrs({'xlink:href': id, ...attr});
+const use = (id, attr={}) => vg(_svgTag('use')).attrs({href: id, ...attr});
 const marker = (markerWidth, markerHeight) => vg(_svgTag('marker')).attrs({markerWidth, markerHeight});
 
 /**
@@ -302,18 +303,18 @@ const path = () => ({
 	before: '',
 	d : [],
 	__ (s, abs = false)	{return n = abs ? s.toUpperCase() : s, this.before === n ? `, ` : (this.before = n , `${n} `);},
-	_stack (v, abs, mk) {return this.d.push(`${this.__(mk, abs)}${v}`), this;},
+	__cache (v, abs, mk) {return this.d.push(`${this.__(mk, abs)}${v}`), this;},
 
 	start (x, y, abs) {return this.d.length = 0, this.move(x, y, abs);},
-	move(x, y, abs) {return this._stack(`${x} ${y}`, abs, 'm');},
-	line(x, y, abs) {return this._stack(`${x} ${y}`, abs, 'l');},
-	x(x, abs) {return this._stack(`${x}`, abs, 'h');},
-	y(y, abs) {return this._stack(`${y}`, abs, 'v');},
-	bezier3d(xy=[0,0], han1=[0,0], han2=[0,0], abs) {return this._stack(`${han1}, ${han2}, ${xy}`, abs, 'c');},
-	bezier3dS(xy=[0,0], han2=[0,0], abs) {return this._stack(`${han2}, ${xy}`, abs, 's');},
-	bezier2d(xy=[0,0], han=[0,0], abs) {return this._stack(`${han}, ${xy}`, abs, 'q');},
-	bezier2dS (xy=[0,0], abs) {return 'qQTt'.includes(this.before) ? this.stack(`${xy}`, abs, 't') : this;},
-	arc(xy=[0,0], rotate, lef, sf, posd=[0,0], abs) {return this.stack(`${xy} ${rotate} ${laf} ${sf} ${posd}`, abs, 'a');},
+	move(x, y, abs) {return this.__cache(`${x} ${y}`, abs, 'm');},
+	line(x, y, abs) {return this.__cache(`${x} ${y}`, abs, 'l');},
+	x(x, abs) {return this.__cache(`${x}`, abs, 'h');},
+	y(y, abs) {return this.__cache(`${y}`, abs, 'v');},
+	bezier3d(xy=[0,0], han1=[0,0], han2=[0,0], abs) {return this.__cache(`${han1}, ${han2}, ${xy}`, abs, 'c');},
+	bezier3dS(xy=[0,0], han2=[0,0], abs) {return this.__cache(`${han2}, ${xy}`, abs, 's');},
+	bezier2d(xy=[0,0], han=[0,0], abs) {return this.__cache(`${han}, ${xy}`, abs, 'q');},
+	bezier2dS (xy=[0,0], abs) {return 'qQTt'.includes(this.before) ? this.__cache(`${xy}`, abs, 't') : this;},
+	arc(xy=[0,0], rotate, lef, sf, posd=[0,0], abs) {return this.__cache(`${xy} ${rotate} ${laf} ${sf} ${posd}`, abs, 'a');},
 	close(attr={}, close=true) {return vg(_svgTag('path')).attrs({...attr, d: this.d.join(' ') + (close ? ' Z' : '')});},
 	toPath(close=true) {return this.d.join(' ') + (close ? ' Z' : '');}
 });
@@ -378,7 +379,7 @@ const animate = (id, ms = 1000, repeat='indefinite', target) => ({
  * ```js
  * <rect x="10" y="20" width="30" height="40">
  *	 <animateMotion dur="2000ms" repeatCount="10">
- *     <mpath xlink:href="#spline_path" />
+ *     <mpath href="#spline_path" />
  *   </animateMotion>
  * </rect>
  * ```
@@ -426,7 +427,7 @@ const animatePath = (id, ms = 1000, repeat = 'indefinite', path) => ({
 		return this;
 	},
 	link (id) {return delete this.op.path, this.lk = id, this;},
-	close () {return vg(_svgTag('animateMotion')).attrs(this.op).$(this.lk === '' ? undefined : vg(_svgTag('mpath').attr({'xlink:href': this.lk})));}
+	close () {return vg(_svgTag('animateMotion')).attrs(this.op).$(this.lk === '' ? undefined : vg(_svgTag('mpath').attr({href: this.lk})));}
 });
 
 const animateTransform = (id, ms = 1000, repeat = 'indefinite', target) => ({
@@ -558,6 +559,7 @@ export {
 	polygon,
 	polyline,
 	defs,
+	symbol,
 	group,
 	use,
 	marker,

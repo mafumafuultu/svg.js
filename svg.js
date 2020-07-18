@@ -110,16 +110,16 @@ const __BASE_PROTO__ = {
 			return this;
 		}
 	},
-	// data : {
-	// 	value(o) {
-	// 		if (this.has('dataset') && this.type(k, 'string')) {
-	// 			v == null
-	// 				? delete this['@'].dataset[k]
-	// 				: this['@'].dataset[k] = v;
-	// 		}
-	// 		return this;
-	// 	}
-	// },
+	data : {
+		value(o) {
+			if (this.has('dataset') && this.type(k, 'string')) {
+				v == null
+					? delete this['@'].dataset[k]
+					: this['@'].dataset[k] = v;
+			}
+			return this;
+		}
+	},
 	attrs: {
 		value(o) {
 			if (this.has('setAttribute')) {
@@ -524,10 +524,30 @@ const MATRIX = {
 	},
 };
 
+
 const trigger = (elem, event) => {
 	let e = document.createEvent('HTMLEvents');
 	e.initEvent(event, true, true);
 	return elem.dispatchEvent(e);
+};
+
+const _canvas = (width, height) => {
+	var canv = vg(_tag('canvas')).attrs({width, height})._();
+	return {canvas: canv, ctx: canv.getContext('2d')};
+};
+const toImage = (el, filename = 'image.png', MIME = 'image/png') => {
+	if (el instanceof SVGSVGElement) {
+		var {canvas, ctx} = _canvas(el.width, el.height);
+		var img = new Image;
+		img.onload = () => {
+			ctx.drawImage(img, 0, 0);
+			vg(_tag('a')).attrs({
+				href: canvas.toDataURL(MIME),
+				download: filename
+			})._().dispatchEvent(new MouseEvent('click'));
+		};
+		img.src = "data:image/svg+xml;charset=utf-8;base64," + btoa(unescape(encodeURIComponent(new XMLSerializer().serializeToString(el))));
+	}
 };
 
 const onload = () => document.readyState !== 'complete'
@@ -548,6 +568,7 @@ export {
 	renderGen,
 	onload,
 	trigger,
+	toImage,
 	MATRIX,
 	TIME,
 	svg,

@@ -138,8 +138,8 @@ div.class = 'bar';
 div.name = 'buz';
 ```
 
-#### vg.zoom([x, y], scale)
-`center = [x, y]`
+#### vg.zoom(center=[x, y], scale)
+
 
 #### vg.$(...child)
 #### vg.$$(...nodes)
@@ -150,7 +150,8 @@ div.name = 'buz';
 #### vg.fill('color')
 #### vg.stroke('color')
 #### vg.fillStroke('fill', 'stroke')
-
+#### vg.on(event, function, capture)
+#### vg.off(event, function, capture)
 
 
 
@@ -182,6 +183,7 @@ svg(200, 200).zoom([100, 100], 2)
 ### polyline([x1,y1], [x2,y2] [,[x, y]...])
 ### polygon([x1,y1], [x2,y2] [,[x, y]...])
 ### defs()
+### symbol()
 ### group()
 ### use(id, attr)
 ### marker
@@ -231,3 +233,12 @@ TIME(1000).s(1).s(1).s(1).s(1)._('s'); // '4s'
 ### TIME().m(milli second)
 ### TIME()._('format')
 format : 'd', 'h', 'm', 's', 'ms'
+
+
+### toImage(svg, filename = 'image.png', mime_type = 'image/png')
+
+SVG -> PNG & Download
+
+```js
+toImage(document.querySelector('svg'));
+```

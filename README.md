@@ -102,11 +102,45 @@ div.id = 'idtext;'
 ```
 
 #### vg.cls('classname', force? )
+
+```js
+const div = () => document.createElement('div');
+div.classList.toggle('classname')
+```
+
 #### vg.addCls(['classNameA', 'classNameB'])
+
+```js
+const div = () => document.createElement('div');
+div.classList.toggle('classname', true);
+```
+
 #### vg.rmCls(['classNameA', 'classNameB'])
+
+```js
+const div = () => document.createElement('div');
+div.classList.toggle('classname', false);
+```
+
 #### vg.data({datakey : 'value'})
+
+
 #### vg.attrs({property : value})
-#### vg.zoom([x, y] )
+
+```js
+vg(_tag('div')).attrs({id: 'foo', class: 'bar', name: 'buz'});
+```
+
+```js
+const div = document.createElement('div');
+div.id = 'foo';
+div.class = 'bar';
+div.name = 'buz';
+```
+
+#### vg.zoom([x, y], scale)
+`center = [x, y]`
+
 #### vg.$(...child)
 #### vg.$$(...nodes)
 #### vg.txt('txt')

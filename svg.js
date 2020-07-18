@@ -34,7 +34,7 @@ const __imageRender = t => ({
 	auto() {return this._set('auto', t);},
 	optimizeSpeed() {return this._set('optimizeSpeed', t)},
 	optimizeLegibility() {return this._set('optimizeLegibility', t);},
-	_set : F.vmod('image-rendering', __renderMap)(v, o)
+	_set : F.vmod('image-rendering', __renderMap)
 });
 const __imageRender_css4 = () => ({
 	get auto() {return {'image-rendering': 'auto'}},
@@ -80,7 +80,7 @@ const __BASE_PROTO__ = {
 	},
 	id : {
 		value(id) {
-			if (this.has('id') && this.type(id, 'String')) {
+			if (this.has('id') && this.type(id, 'string')) {
 				this['@'].id = id;
 			}
 			return this;
@@ -88,7 +88,7 @@ const __BASE_PROTO__ = {
 	},
 	cls : {
 		value(v, force = true) {
-			if (this.has('classList') && this.type(v, 'String')) {
+			if (this.has('classList') && this.type(v, 'string')) {
 				this['@'].classList.toggle(v, force);
 			}
 			return this;
@@ -110,16 +110,16 @@ const __BASE_PROTO__ = {
 			return this;
 		}
 	},
-	data : {
-		value(o) {
-			if (this.has('dataset') && this.type(k, 'String')) {
-				v == null
-					? delete this['@'].dataset[k]
-					: this['@'].dataset[k] = v;
-			}
-			return this;
-		}
-	},
+	// data : {
+	// 	value(o) {
+	// 		if (this.has('dataset') && this.type(k, 'string')) {
+	// 			v == null
+	// 				? delete this['@'].dataset[k]
+	// 				: this['@'].dataset[k] = v;
+	// 		}
+	// 		return this;
+	// 	}
+	// },
 	attrs: {
 		value(o) {
 			if (this.has('setAttribute')) {

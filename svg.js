@@ -71,9 +71,7 @@ const __BASE_PROTO__ = {
 		value (prop) {return prop in this["@"];}
 	},
 	type: {
-		value(t, is) {
-			return typeof t === is;
-		}
+		value(t, is) {return typeof t === is;}
 	},
 	of : {
 		value (v, t) {return v instanceof t;}
@@ -205,27 +203,25 @@ const __BASE_PROTO__ = {
 	},
 	fill: {
 		value(color = 'transparent') {
-			if (this.has('setAttribute')) {
-				this['@'].setAttribute('fill', color);
-			}
-			return this;
+			return this.type(color, 'string')
+				? this.attrs({'fill': color})
+				: this;
 		}
 	},
 	stroke: {
-		value(color = 'transparent') {
-			if (this.has('setAttribute')) {
-				this['@'].setAttribute('stroke', color);
-			}
-			return this;
+		value(color = 'transparent', width) {
+			return this.type(color, 'string')
+				? Object.is(width, undefined)
+					? this.attrs({stroke : color})
+					: this.attrs({stroke : color, 'stroke-width' : width})
+				: this;
 		}
 	},
 	fillStroke : {
 		value(fill = 'transparent', stroke = 'transparent') {
-			if (this.has('setAttribute')) {
-				this['@'].setAttribute('fill', fill);
-				this['@'].setAttribute('stroke', stroke);
-			}
-			return this;
+			return this.type(fill, 'string') && this.type(stroke, 'string')
+				? this.attrs({fill, stroke})
+				: this;
 		}
 	},
 	on : {
@@ -535,6 +531,7 @@ const _canvas = (width, height) => {
 	var canv = vg(_tag('canvas')).attrs({width, height})._();
 	return {canvas: canv, ctx: canv.getContext('2d')};
 };
+
 const toImage = (el, filename = 'image.png', MIME = 'image/png') => {
 	if (el instanceof SVGSVGElement) {
 		var {canvas, ctx} = _canvas(el.width, el.height);
